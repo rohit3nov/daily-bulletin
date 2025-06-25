@@ -7,28 +7,56 @@ use Illuminate\Http\Request;
 
 class ArticleQueryBuilder
 {
-    public static function apply(Request $request, Builder $query): Builder
+    public function __construct(protected Builder $query) {}
+
+    public function apply(Request $request): Builder
     {
-        if ($keyword = $request->input('keyword')) {
-            $query->where(function ($q) use ($keyword) {
-                $q->where('title', 'like', "%{$keyword}%")
-                    ->orWhere('description', 'like', "%{$keyword}%")
-                    ->orWhere('content', 'like', "%{$keyword}%");
+        return $this
+            ->filterByCategory($request)
+            ->filterByKeyword($request)
+            ->filterByDate($request)
+            ->filterBySource($request)
+            ->query;
+    }
+
+    protected function filterByCategory(Request $request): self
+    {
+        if ($request->filled('category')) {
+            $this->query->whereHas('category', function ($q) use ($request) {
+                $q->where('name', $request->category);
             });
         }
 
-        if ($category = $request->input('category')) {
-            $query->whereHas('category', fn($q) => $q->where('name', $category));
+        return $this;
+    }
+
+    protected function filterByKeyword(Request $request): self
+    {
+        if ($request->filled('q')) {
+            $this->query->where(function ($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->q . '%')
+                    ->orWhere('description', 'like', '%' . $request->q . '%');
+            });
         }
 
-        if ($source = $request->input('source')) {
-            $query->where('source', $source);
+        return $this;
+    }
+
+    protected function filterByDate(Request $request): self
+    {
+        if ($request->filled('date')) {
+            $this->query->whereDate('published_at', $request->date);
         }
 
-        if ($date = $request->input('date')) {
-            $query->whereDate('published_at', $date);
+        return $this;
+    }
+
+    protected function filterBySource(Request $request): self
+    {
+        if ($request->filled('source')) {
+            $this->query->where('source', $request->source);
         }
 
-        return $query;
+        return $this;
     }
 }

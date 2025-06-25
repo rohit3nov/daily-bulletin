@@ -18,11 +18,14 @@ class ArticleResource extends JsonResource
             'id'            => $this->id,
             'title'         => $this->title,
             'description'   => $this->description,
+            'content'       => $this->content,
             'author'        => $this->author,
             'source'        => $this->source,
+            'source_id'     => $this->source_id,
             'url'           => $this->url,
-            'published_at'  => $this->published_at->toDateTimeString(),
-            'category'      => $this->category->name ?? null,
+            'url_to_image'  => $this->url_to_image,
+            'published_at'  => $this->published_at?->toIso8601String(),
+            'category'      => $this->category?->name, // assumes `category` is eager-loaded
         ];
     }
 }

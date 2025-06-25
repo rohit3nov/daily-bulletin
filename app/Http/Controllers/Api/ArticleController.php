@@ -12,17 +12,17 @@ class ArticleController extends Controller
 {
     public function index(Request $request)
     {
-        $articles = ArticleQueryBuilder::apply($request, Article::with('category'))
-            ->latest('published_at')
-            ->paginate($request->input('per_page', 10));
+        $query = Article::with('category');
 
-        return ArticleResource::collection($articles);
+        $filteredQuery = (new ArticleQueryBuilder($query))->apply($request);
+
+        return ArticleResource::collection($filteredQuery->latest()->paginate(10));
     }
 
-    public function show($id)
+    public function show(Article $article)
     {
-        $article = Article::with('category')->findOrFail($id);
+        $article->load('category');
 
-        return ArticleResource::collection($article);
+        return new ArticleResource($article);
     }
 }
