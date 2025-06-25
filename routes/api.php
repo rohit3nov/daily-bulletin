@@ -28,9 +28,9 @@ Route::prefix('user')
     ->middleware('auth:sanctum')
     ->controller(UserController::class)
     ->group(function () {
-        Route::get('/', 'user');
-        Route::put('update', 'updateProfile');
-        Route::put('feed', 'updateProfile');
+        Route::get('/', 'index');
+        Route::put('update', 'update');
+        Route::put('feed', 'feed');
     });
 
 Route::prefix('preferences')
@@ -40,7 +40,6 @@ Route::prefix('preferences')
         Route::get('/', 'show');
         Route::put('/', 'update');
     });
-Route::get('articles/personalized', [ArticleController::class, 'personalized'])->middleware('auth:sanctum');
 
 
 Route::apiResource('articles', ArticleController::class)->only(['index', 'show']);

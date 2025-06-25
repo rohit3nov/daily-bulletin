@@ -10,16 +10,16 @@ use App\Http\Resources\ArticleResource;
 
 class UserController extends Controller
 {
+    public function index(Request $request)
+    {
+        return response()->json($request->user());
+    }
+
     public function update(UpdateProfileRequest $request)
     {
         $request->user()->update($request->validated());
 
         return response()->json(['message' => 'Profile updated successfully.']);
-    }
-
-    public function user(Request $request)
-    {
-        return response()->json($request->user());
     }
 
     public function feed(Request $request)
