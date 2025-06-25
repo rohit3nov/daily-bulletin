@@ -1,69 +1,73 @@
 <?php
 
-namespace tests\Unit\Services\NewsApi;
+namespace Tests\Unit\Services;
 
 use App\Services\NewsApi\NewsOrg;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
-
 class NewsOrgTest extends TestCase
 {
-    public function test_it_fetches_articles_from_newsorgapi_and_parses_them_correctly()
+    /** @test */
+    public function it_fetches_and_maps_articles_correctly()
     {
+        // Mock config for NewsOrg
+        Config::set('services.newsapi.sources.newsorg', [
+            'url'          => 'https://newsapi.org',
+            'endpoint'     => '/v2/top-headlines',
+            'search_key'   => 'q',
+            'response_key' => 'articles',
+            'rate_limit'   => 10,
+            'query_params' => [
+                'country'  => 'us',
+                'pageSize' => 20,
+                'apiKey'   => 'fake-key',
+            ],
+            'mapping'      => [
+                'title'        => 'title',
+                'description'  => 'description',
+                'url'          => 'url',
+                'url_to_image' => 'urlToImage',
+                'published_at' => 'publishedAt',
+                'source'       => 'source.name',
+                'source_id'    => 'source.id',
+                'author'       => 'author',
+                'content'      => 'content',
+            ]
+        ]);
+
+        // Mock the API response (based on your original data)
         Http::fake(
             [
-                'newsapi.org/*' => Http::response(
+                'https://newsapi.org/*' => Http::response(
                     [
                         'status'       => 'ok',
-                        'totalResults' => 2,
+                        'totalResults' => 1,
                         'articles'     => [
                             [
-                                'source'      => [
-                                    'id'   => 'cnn',
-                                    'name' => 'CNN'
-                                ],
-                                'author'      => 'John Doe',
-                                'title'       => 'Test Title 1',
-                                'description' => 'Test description 1',
-                                'url'         => 'https://example.com/article1',
-                                'urlToImage'  => 'https://example.com/image1.jpg',
-                                'publishedAt' => '2025-06-20T10:00:00Z',
-                                'content'     => 'Content 1',
-                            ],
-                            [
-                                'source'      => [
-                                    'id'   => 'bbc-news',
-                                    'name' => 'BBC News'
-                                ],
-                                'author'      => 'Jane Smith',
-                                'title'       => 'Test Title 2',
-                                'description' => 'Test description 2',
-                                'url'         => 'https://example.com/article2',
-                                'urlToImage'  => 'https://example.com/image2.jpg',
-                                'publishedAt' => '2025-06-20T11:00:00Z',
-                                'content'     => 'Content 2',
+                                'source'      => ['id' => null, 'name' => 'BBC News'],
+                                'author'      => null,
+                                'title'       => 'Minnesota shootings suspect was a prepper',
+                                'description' => 'After shooting two local politicians...',
+                                'url'         => 'https://www.bbc.com/news/articles/c89ev9j955ko',
+                                'urlToImage'  => 'https://ichef.bbci.co.uk/news/1024/branded_news/sample1.jpg',
+                                'publishedAt' => now()->toIso8601String(),
+                                'content'     => 'Sample content 1'
                             ]
-                        ],
+                        ]
                     ],
                     200
                 )
             ]
         );
 
-        $fetcher  = new NewsOrg();
-        $articles = $fetcher->fetch();
+        $service  = new NewsOrg();
+        $articles = $service->fetch('Politics');
 
-        $this->assertCount(2, $articles);
-
-        $this->assertEquals('Test Title 1', $articles[0]['title']);
-        $this->assertEquals('https://example.com/article1', $articles[0]['url']);
-        $this->assertEquals('cnn', $articles[0]['source_id']);
-        $this->assertEquals('CNN', $articles[0]['source']);
-
-        $this->assertEquals('Test Title 2', $articles[1]['title']);
-        $this->assertEquals('https://example.com/article2', $articles[1]['url']);
-        $this->assertEquals('bbc-news', $articles[1]['source_id']);
-        $this->assertEquals('BBC News', $articles[1]['source']);
+        $this->assertCount(1, $articles);
+        $this->assertEquals('Minnesota shootings suspect was a prepper', $articles[0]['title']);
+        $this->assertEquals('BBC News', $articles[0]['source']);
+        $this->assertEquals('https://www.bbc.com/news/articles/c89ev9j955ko', $articles[0]['url']);
     }
 }

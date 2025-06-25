@@ -1,59 +1,74 @@
 <?php
 
+namespace Tests\Unit\Services;
 
-namespace Tests\Unit\Services\NewsApi;
-
-use Tests\TestCase;
-use Illuminate\Support\Facades\Http;
 use App\Services\NewsApi\Guardian;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
 
 class GuardianTest extends TestCase
 {
-    public function test_it_returns_multiple_articles_in_normalized_format()
+    /** @test */
+    public function it_fetches_and_maps_articles_correctly()
     {
+        // Configure Guardian API
+        Config::set('services.newsapi.sources.guardian', [
+            'url'          => 'https://content.guardianapis.com',
+            'endpoint'     => 'search',
+            'search_key'   => 'q',
+            'response_key' => 'response.results',
+            'rate_limit'   => 10,
+            'query_params' => [
+                'show-fields' => 'thumbnail,bodyText,byline',
+                'api-key'     => 'fake-key',
+            ],
+            'mapping'      => [
+                'title'        => 'webTitle',
+                'description'  => 'description',
+                'url'          => 'webUrl',
+                'url_to_image' => 'fields.thumbnail',
+                'published_at' => 'webPublicationDate',
+                'source'       => 'The Guardian',
+                'source_id'    => 'guardian',
+                'author'       => 'fields.byline',
+                'content'      => 'fields.bodyText',
+            ]
+        ]);
+
+        // Fake HTTP response
         Http::fake(
             [
-                '*' => Http::response(
+                'https://content.guardianapis.com/*' => Http::response(
                     [
-                        'response' =>
-                            [
-                                'results' =>
-                                    [
-                                        [
-                                            'webTitle'           => 'Article One',
-                                            'webUrl'             => 'https://example.com/article-one',
-                                            'webPublicationDate' => '2025-06-20T10:00:00Z',
-                                            'fields'             => [
-                                                'thumbnail' => 'https://example.com/image1.jpg',
-                                                'bodyText'  => 'Content one'
-                                            ],
-                                            'sectionName'        => 'World',
-                                            'pillarName'         => 'News',
-                                            'tags'               => [['webTitle' => 'Author One']],
-                                        ],
-                                        [
-                                            'webTitle'           => 'Article Two',
-                                            'webUrl'             => 'https://example.com/article-two',
-                                            'webPublicationDate' => '2025-06-20T11:00:00Z',
-                                            'fields'             => [
-                                                'thumbnail' => 'https://example.com/image2.jpg',
-                                                'bodyText'  => 'Content two'
-                                            ],
-                                            'sectionName'        => 'Tech',
-                                            'pillarName'         => 'Science',
-                                            'tags'               => [['webTitle' => 'Author Two']],
-                                        ],
-                                    ]
+                        'response' => [
+                            'results' => [
+                                [
+                                    'webTitle'           => 'NASA Psyche returns to full thrust',
+                                    'description'        => 'NASA update...',
+                                    'webUrl'             => 'https://guardian.com/space/psyche-returns',
+                                    'fields'             => [
+                                        'thumbnail' => 'https://guardian.com/images/sample3.jpg',
+                                        'byline'    => 'Staff Writer',
+                                        'bodyText'  => 'Sample content 3'
+                                    ],
+                                    'webPublicationDate' => now()->toIso8601String(),
+                                ]
                             ]
-                    ]
+                        ]
+                    ],
+                    200
                 )
             ]
         );
 
-        $articles = (new Guardian())->fetch();
+        $service  = new Guardian();
+        $articles = $service->fetch('Science');
 
-        $this->assertCount(2, $articles);
-        $this->assertEquals('Article One', $articles[0]['title']);
-        $this->assertEquals('Article Two', $articles[1]['title']);
+        $this->assertCount(1, $articles);
+        $this->assertEquals('NASA Psyche returns to full thrust', $articles[0]['title']);
+        $this->assertEquals('The Guardian', $articles[0]['source']);
+        $this->assertEquals('https://guardian.com/space/psyche-returns', $articles[0]['url']);
+        $this->assertEquals('Staff Writer', $articles[0]['author']);
     }
 }
