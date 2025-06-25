@@ -2,34 +2,10 @@
 
 namespace app\Services\NewsApi;
 
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Http;
+use App\Contracts\NewsApiInterface;
 
-class NYTimes
+class NYTimes extends AbstractNewsApiService implements NewsApiInterface
 {
-    public function fetch(): array
-    {
-        $apiKey = config('services.nytimes.key');
-        $url    = "https://api.nytimes.com/svc/topstories/v2/home.json?api-key={$apiKey}";
+    public const API_NAME = 'NYTimes';
 
-        $response = Http::get($url);
-
-        if ($response->failed()) {
-            return [];
-        }
-
-        return collect($response->json('results', []))->map(function ($item) {
-            return [
-                'title'        => $item['title'] ?? null,
-                'description'  => $item['abstract'] ?? null,
-                'url'          => $item['url'] ?? null,
-                'url_to_image' => $item['multimedia'][0]['url'] ?? null,
-                'published_at' => isset($item['published_date']) ? Carbon::parse($item['published_date']) : null,
-                'source_id'    => 'nytimes',
-                'source'       => 'New York Times',
-                'author'       => $item['byline'] ?? null,
-                'content'      => null,
-            ];
-        })->all();
-    }
 }

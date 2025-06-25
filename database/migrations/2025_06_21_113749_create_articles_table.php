@@ -25,6 +25,9 @@ return new class extends Migration
             $table->string('source', 255)->nullable();
             $table->string('source_id', 255)->nullable();
             $table->string('author', 255)->nullable();
+
+            $table->foreignId('category_id')->nullable()->constrained()->onDelete('set null');
+
             $table->timestamps();
 
             $table->index('published_at');

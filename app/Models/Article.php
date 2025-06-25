@@ -26,4 +26,9 @@ class Article extends Model
             $article->url_hash = hash('sha256', $article->url);
         });
     }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }
