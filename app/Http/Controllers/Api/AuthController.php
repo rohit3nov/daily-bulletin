@@ -8,9 +8,29 @@ use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
 
+
+/**
+ * @group Authentication
+ * APIs for user registration, login, and password resets.
+ */
 class AuthController extends Controller
 {
+    /**
+     * Register a new user.
+     *
+     * @bodyParam name string required The name of the user.
+     * @bodyParam email string required The email of the user.
+     * @bodyParam password string required The password.
+     * @bodyParam password_confirmation string required Must match password.
+     *
+     * @response 201 {
+     *   "message": "Registered successfully",
+     *   "token": "your-token-here"
+     * }
+     */
     public function register(RegisterRequest $request)
     {
         $user = User::create([
@@ -27,6 +47,17 @@ class AuthController extends Controller
         ],201);
     }
 
+    /**
+     * Login a user.
+     *
+     * @bodyParam email string required
+     * @bodyParam password string required
+     *
+     * @response 200 {
+     *   "message": "Login successful",
+     *   "token": "your-token-here"
+     * }
+     */
     public function login(LoginRequest $request)
     {
         $user = User::where('email', $request->email)->first();
@@ -43,6 +74,13 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Logout the authenticated user.
+     *
+     * @response 200 {
+     *   "message": "Logged out"
+     * }
+     */
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
@@ -50,6 +88,15 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out']);
     }
 
+    /**
+     * Request a password reset link.
+     *
+     * @bodyParam email string required The user's email.
+     *
+     * @response 200 {
+     *   "message": "Password reset link sent"
+     * }
+     */
     public function forgotPassword(ForgotPasswordRequest $request)
     {
         $status = Password::sendResetLink($request->only('email'));
@@ -59,6 +106,18 @@ class AuthController extends Controller
             : response()->json(['message' => __($status)], 400);
     }
 
+    /**
+     * Reset the password.
+     *
+     * @bodyParam token string required Reset token.
+     * @bodyParam email string required Email associated with the token.
+     * @bodyParam password string required New password.
+     * @bodyParam password_confirmation string required Confirm password.
+     *
+     * @response 200 {
+     *   "message": "Password has been reset"
+     * }
+     */
     public function resetPassword(ResetPasswordRequest $request)
     {
         $status = Password::reset(
@@ -71,6 +130,17 @@ class AuthController extends Controller
             : response()->json(['message' => __($status)], 400);
     }
 
+    /**
+     * Change the authenticated user's password.
+     *
+     * @bodyParam current_password string required
+     * @bodyParam new_password string required
+     * @bodyParam new_password_confirmation string required
+     *
+     * @response 200 {
+     *   "message": "Password changed successfully"
+     * }
+     */
     public function changePassword(ChangePasswordRequest $request)
     {
         if (!Hash::check($request->current_password, $request->user()->password)) {
