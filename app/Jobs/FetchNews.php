@@ -2,9 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Contracts\NewsApiInterface;
-use App\Models\Article;
-use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -20,24 +17,37 @@ class FetchNews implements ShouldQueue
     protected array $articles = [];
 
     public function __construct(
-        protected NewsApiInterface $api,
-        protected string $category,
-        protected ArticleService $articleService
-    ) {}
+        protected string $source,
+        protected string $category
+    ) {
+    }
 
-
-    public function handle(): void
+    public function getCategory(): string
     {
-        $this->articles = RateLimiter::attempt(
-            'news-api-' . $this->api->getName(),
-            $this->api->getRateLimit(),
-            function () {
-                $this->api->fetch($this->category);
-            }
-        );
+        return $this->category;
+    }
+
+    public function handle(ArticleService $articleService): void
+    {
+        $sourceClass = "App\\Services\\NewsApi\\{$this->source}";
+
+        if (!class_exists($sourceClass)) {
+            logger()->warning("Source class {$sourceClass} not implemented. Skipping.");
+            return;
+        }
+
+         $api = app($sourceClass);
+
+         RateLimiter::attempt(
+             'news-api-' . $api->getName(),
+             $api->getRateLimit(),
+             function () use ($api) {
+                 $this->articles = $api->fetch($this->category);
+             }
+         );
 
         if (!empty($this->articles)) {
-            $this->articleService->storeMany($this->articles, $this->category);
+            $articleService->storeMany($this->articles, $this->category);
         }
     }
 }

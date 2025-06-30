@@ -16,6 +16,7 @@ class Article extends Model
         'source',
         'source_id',
         'author',
+        'category_id'
     ];
 
     protected static function boot()

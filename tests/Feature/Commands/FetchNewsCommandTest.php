@@ -39,6 +39,10 @@ class FetchNewsCommandTest extends TestCase
                     'source_id'    => 'source.id',
                     'author'       => 'author',
                     'content'      => 'content'
+                ],
+                'categories'   => [
+                    'business',
+                    'technology',
                 ]
             ],
             'Guardian' => [
@@ -61,21 +65,21 @@ class FetchNewsCommandTest extends TestCase
                     'source_id'    => 'guardian',
                     'author'       => 'fields.byline',
                     'content'      => 'fields.bodyText'
+                ],
+                'categories'   => [
+                    'World News',
+                    'Technology',
                 ]
             ],
         ]);
 
-        Config::set('services.newsapi.categories', ['Business', 'Technology']);
-
-        // Act
         Artisan::call('fetch:news');
 
-        // Assert that 2 sources × 2 categories = 4 jobs were dispatched
         Bus::assertDispatchedTimes(FetchNews::class, 4);
 
         // Optional: make sure a specific category/source job is dispatched
         Bus::assertDispatched(FetchNews::class, function ($job) {
-            return $job->category === 'Business';
+            return strtolower($job->getCategory()) === 'technology';
         });
     }
 
@@ -85,7 +89,6 @@ class FetchNewsCommandTest extends TestCase
         Bus::fake();
 
         Config::set('services.newsapi.sources', []);
-        Config::set('services.newsapi.categories', ['General']);
 
         Artisan::call('fetch:news');
 

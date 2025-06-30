@@ -34,40 +34,15 @@ return [
             'channel'              => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
     'newsapi' => [
-        'categories' => [
-            'General',
-            'Breaking News',
-            'World News',
-            'Politics',
-            'Business',
-            'Technology',
-            'Science',
-            'Health',
-            'Sports',
-            'Entertainment',
-            'Lifestyle',
-            'Education',
-            'Environment',
-            'Arts & Culture',
-            'Travel',
-            'Food & Dining',
-            'Opinion',
-            'Weather',
-            'Crime',
-            'Real Estate',
-            'Markets',
-        ],
         'sources'    => [
             'NewsOrg' => [
-                'url'          => 'https://newsapi.org',
-                'endpoint'     => '/v2/top-headlines',
+                'url'          => 'https://newsapi.org/v2/',
+                'endpoint'     => 'everything',
                 'search_key'   => 'q',
                 'response_key' => 'articles',
                 'rate_limit'   => 10,
                 'query_params'  => [
-                    'country'  => 'us',
                     'pageSize' => 20,
                     'apiKey'   => env('NEWSAPI_ORG_API_KEY'),
                 ],
@@ -81,10 +56,19 @@ return [
                     'source_id'    => 'source.id',
                     'author'       => 'author',
                     'content'      => 'content',
+                ],
+                'categories'   => [
+                    'general',
+                    'business',
+                    'technology',
+                    'science',
+                    'health',
+                    'sports',
+                    'entertainment'
                 ]
             ],
             'Guardian'    => [
-                'url'          => 'https://content.guardianapis.com',
+                'url'          => 'https://content.guardianapis.com/',
                 'endpoint'     => 'search',
                 'search_key'   => 'q',
                 'response_key' => 'response.results',
@@ -103,12 +87,21 @@ return [
                     'source_id'    => 'guardian',
                     'author'       => 'fields.byline',
                     'content'      => 'fields.bodyText',
+                ],
+                'categories'   => [
+                    'World News',
+                    'Politics',
+                    'Technology',
+                    'Science',
+                    'Education',
+                    'Environment',
+                    'Travel'
                 ]
             ],
             'NYTimes'     => [
-                'url'          => 'https://api.nytimes.com',
-                'endpoint'     => 'svc/topstories/v2/home.json',
-                'search_key'   => 'q',
+                'url'          => 'https://api.nytimes.com/',
+                'endpoint'     => 'svc/topstories/v2/{section}.json',
+                'search_key'   => null,
                 'response_key' => 'results',
                 'rate_limit'   => 10,
                 'query_params'  => [
@@ -124,6 +117,16 @@ return [
                     'source_id'    => 'nytimes',
                     'author'       => 'byline',
                     'content'      => 'content',
+                ],
+                'categories'   => [ // NYTimes uses sections
+                    'world',
+                    'politics',
+                    'technology',
+                    'health',
+                    'science',
+                    'business',
+                    'arts',
+                    'sports'
                 ]
             ]
         ]

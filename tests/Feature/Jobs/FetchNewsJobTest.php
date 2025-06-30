@@ -1,14 +1,10 @@
 <?php
 
-
 namespace Tests\Feature\Jobs;
 
 use App\Jobs\FetchNews;
-use App\Models\Category;
-use App\Models\Article;
 use App\Services\ArticleService;
 use App\Contracts\NewsApiInterface;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
