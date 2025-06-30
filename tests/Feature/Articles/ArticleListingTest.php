@@ -20,7 +20,7 @@ class ArticleListingTest extends TestCase
 
         $response->assertOk()
             ->assertJsonStructure(['data', 'links', 'meta'])
-            ->assertJsonCount(15, 'data'); // Default per-page is 15
+            ->assertJsonCount(10, 'data');
     }
 
     /** @test */
@@ -28,13 +28,15 @@ class ArticleListingTest extends TestCase
     {
         $category = Category::factory()->create(['name' => 'Technology']);
 
-        $article = Article::factory()->create([
-                                                  'title' => 'SpaceX Falcon Launch',
-                                                  'source' => 'CNN',
-                                                  'author' => 'Elon Writer',
-                                                  'published_at' => now(),
-                                                  'category_id' => $category->id,
-                                              ]);
+        $article = Article::factory()->create(
+            [
+                'title'        => 'SpaceX Falcon Launch',
+                'source'       => 'CNN',
+                'author'       => 'Elon Writer',
+                'published_at' => now(),
+                'category_id'  => $category->id,
+            ]
+        );
 
         Article::factory()->count(10)->create(); // Noise
 
@@ -57,12 +59,12 @@ class ArticleListingTest extends TestCase
     public function it_returns_articles_with_category_data()
     {
         $category = Category::factory()->create(['name' => 'AI']);
-        $article = Article::factory()->create(['category_id' => $category->id]);
+        $article  = Article::factory()->create(['category_id' => $category->id]);
 
         $response = $this->getJson('/api/articles');
 
         $response->assertOk()
-            ->assertJsonPath('data.0.category.name', 'AI');
+            ->assertJsonPath('data.0.category', 'AI');
     }
 
     /** @test */
@@ -70,9 +72,9 @@ class ArticleListingTest extends TestCase
     {
         Article::factory()->count(50)->create();
 
-        $start = microtime(true);
+        $start    = microtime(true);
         $response = $this->getJson('/api/articles');
-        $elapsed = microtime(true) - $start;
+        $elapsed  = microtime(true) - $start;
 
         $response->assertOk();
         $this->assertLessThan(1.5, $elapsed, 'Articles listing is too slow');

@@ -24,7 +24,7 @@ class ArticleResource extends JsonResource
             'source_id'     => $this->source_id,
             'url'           => $this->url,
             'url_to_image'  => $this->url_to_image,
-            'published_at'  => $this->published_at?->toIso8601String(),
+            'published_at'  => \Carbon\Carbon::parse($this->published_at)->toIso8601String(),
             'category'      => $this->category?->name, // assumes `category` is eager-loaded
         ];
     }

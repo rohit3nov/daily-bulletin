@@ -17,6 +17,8 @@ class FetchNewsJobTest extends TestCase
     {
         // Arrange
         $category = 'Science';
+        $source   = 'MockApi';
+        $rateKey  = "news-api-mockapi";
 
         $mockApi = $this->createMock(NewsApiInterface::class);
         $mockApi->method('getName')->willReturn('mockapi');

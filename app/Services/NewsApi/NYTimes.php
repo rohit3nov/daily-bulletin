@@ -3,6 +3,7 @@
 namespace app\Services\NewsApi;
 
 use App\Contracts\NewsApiInterface;
+use App\Services\NewsApi\AbstractNewsApiService;
 
 class NYTimes extends AbstractNewsApiService implements NewsApiInterface
 {

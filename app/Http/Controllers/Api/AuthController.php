@@ -10,6 +10,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Http\Requests\Auth\ChangePasswordRequest;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\ValidationException;
 
 
 /**
@@ -25,26 +28,30 @@ class AuthController extends Controller
      * @bodyParam email string required The email of the user.
      * @bodyParam password string required The password.
      * @bodyParam password_confirmation string required Must match password.
-     *
-     * @response 201 {
+     * @response  201 {
      *   "message": "Registered successfully",
      *   "token": "your-token-here"
      * }
      */
     public function register(RegisterRequest $request)
     {
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        $user = User::create(
+            [
+                'name'     => $request->name,
+                'email'    => $request->email,
+                'password' => Hash::make($request->password),
+            ]
+        );
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
-            'user'  => $user,
-            'token' => $token,
-        ],201);
+        return response()->json(
+            [
+                'user'  => $user,
+                'token' => $token,
+            ],
+            201
+        );
     }
 
     /**
@@ -52,8 +59,7 @@ class AuthController extends Controller
      *
      * @bodyParam email string required
      * @bodyParam password string required
-     *
-     * @response 200 {
+     * @response  200 {
      *   "message": "Login successful",
      *   "token": "your-token-here"
      * }
@@ -62,16 +68,18 @@ class AuthController extends Controller
     {
         $user = User::where('email', $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
-            'user'  => $user,
-            'token' => $token,
-        ]);
+        return response()->json(
+            [
+                'user'  => $user,
+                'token' => $token,
+            ]
+        );
     }
 
     /**
@@ -85,15 +93,14 @@ class AuthController extends Controller
     {
         $request->user()->tokens()->delete();
 
-        return response()->json(['message' => 'Logged out']);
+        return response()->json(['message' => 'Logged out successfully.']);
     }
 
     /**
      * Request a password reset link.
      *
      * @bodyParam email string required The user's email.
-     *
-     * @response 200 {
+     * @response  200 {
      *   "message": "Password reset link sent"
      * }
      */
@@ -101,9 +108,15 @@ class AuthController extends Controller
     {
         $status = Password::sendResetLink($request->only('email'));
 
-        return $status === Password::RESET_LINK_SENT
-            ? response()->json(['message' => __($status)])
-            : response()->json(['message' => __($status)], 400);
+        if ($status !== Password::RESET_LINK_SENT) {
+            throw ValidationException::withMessages(
+                [
+                    'email' => [__($status)],
+                ]
+            );
+        }
+
+        return response()->json(['message' => __($status)]);
     }
 
     /**
@@ -113,8 +126,7 @@ class AuthController extends Controller
      * @bodyParam email string required Email associated with the token.
      * @bodyParam password string required New password.
      * @bodyParam password_confirmation string required Confirm password.
-     *
-     * @response 200 {
+     * @response  200 {
      *   "message": "Password has been reset"
      * }
      */
@@ -125,9 +137,15 @@ class AuthController extends Controller
             fn($user, $password) => $user->update(['password' => bcrypt($password)])
         );
 
-        return $status === Password::PASSWORD_RESET
-            ? response()->json(['message' => __($status)])
-            : response()->json(['message' => __($status)], 400);
+        if ($status !== Password::PASSWORD_RESET) {
+            throw ValidationException::withMessages(
+                [
+                    'email' => [__($status)],
+                ]
+            );
+        }
+
+        return response()->json(['message' => __($status)]);
     }
 
     /**
@@ -136,17 +154,18 @@ class AuthController extends Controller
      * @bodyParam current_password string required
      * @bodyParam new_password string required
      * @bodyParam new_password_confirmation string required
-     *
-     * @response 200 {
+     * @response  200 {
      *   "message": "Password changed successfully"
      * }
      */
     public function changePassword(ChangePasswordRequest $request)
     {
         if (!Hash::check($request->current_password, $request->user()->password)) {
-            throw ValidationException::withMessages([
-                'current_password' => ['The provided password is incorrect.'],
-            ]);
+            throw ValidationException::withMessages(
+                [
+                    'current_password' => ['The provided password is incorrect.'],
+                ]
+            );
         }
 
         $request->user()->update(['password' => bcrypt($request->password)]);
@@ -158,5 +177,4 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
-
 }

@@ -4,6 +4,7 @@ namespace Tests\Feature\UserPreferences;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class UserPreferencesTest extends TestCase
@@ -29,33 +30,40 @@ class UserPreferencesTest extends TestCase
         $response = $this->putJson('/api/preferences', $payload);
 
         $response->assertOk()
-            ->assertJsonFragment(['message' => 'Preferences updated successfully']);
+            ->assertJsonFragment(['message' => 'Preferences updated successfully.']);
 
-        $this->assertDatabaseHas('users', [
-            'id'                   => $this->user->id,
-            'preferred_sources'    => json_encode($payload['preferred_sources']),
-            'preferred_categories' => json_encode($payload['preferred_categories']),
-            'preferred_authors'    => json_encode($payload['preferred_authors']),
-        ]);
+        $this->assertTrue(
+            DB::table('user_preferences')
+                ->where('user_id', $this->user->id)
+                ->whereJsonContains('preferred_sources', ['newsorg'])
+                ->whereJsonContains('preferred_sources', ['nytimes'])
+                ->whereJsonContains('preferred_categories', ['Technology'])
+                ->whereJsonContains('preferred_authors', ['Jane Smith'])
+                ->exists()
+        );
     }
 
     /** @test */
     public function user_can_get_preferences()
     {
-        $this->user->update([
-                                'preferred_sources'    => ['newsorg', 'guardian'],
-                                'preferred_categories' => ['Politics', 'Science'],
-                                'preferred_authors'    => ['Alice', 'Bob'],
-                            ]);
+        $this->user->preference()->create(
+            [
+                'preferred_sources'    => ['newsorg', 'guardian'],
+                'preferred_categories' => ['Politics', 'Science'],
+                'preferred_authors'    => ['Alice', 'Bob'],
+            ]
+        );
 
         $response = $this->getJson('/api/preferences');
 
         $response->assertOk()
-            ->assertJson([
-                             'preferred_sources'    => ['newsorg', 'guardian'],
-                             'preferred_categories' => ['Politics', 'Science'],
-                             'preferred_authors'    => ['Alice', 'Bob'],
-                         ]);
+            ->assertJson(
+                [
+                    'preferred_sources'    => ['newsorg', 'guardian'],
+                    'preferred_categories' => ['Politics', 'Science'],
+                    'preferred_authors'    => ['Alice', 'Bob'],
+                ]
+            );
     }
 
     /** @test */

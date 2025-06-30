@@ -51,6 +51,6 @@ class UserPreferenceController extends Controller
             $request->only(['preferred_sources', 'preferred_categories', 'preferred_authors'])
         );
 
-        return response()->json(['message' => 'Preferences updated.']);
+        return response()->json(['message' => 'Preferences updated successfully.']);
     }
 }

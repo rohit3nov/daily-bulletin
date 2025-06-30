@@ -14,9 +14,11 @@ class ChangePasswordTest extends TestCase
     /** @test */
     public function it_changes_password_for_authenticated_user()
     {
-        $user = User::factory()->create([
-                                            'password' => bcrypt('oldpassword'),
-                                        ]);
+        $user = User::factory()->create(
+            [
+                'password' => bcrypt('oldpassword'),
+            ]
+        );
 
         Sanctum::actingAs($user);
 
@@ -27,17 +29,21 @@ class ChangePasswordTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJson([
-                             'message' => 'Password changed successfully.',
-                         ]);
+            ->assertJson(
+                [
+                    'message' => 'Password changed successfully.',
+                ]
+            );
     }
 
     /** @test */
     public function it_fails_to_change_password_with_wrong_current_password()
     {
-        $user = User::factory()->create([
-                                            'password' => bcrypt('correct-password'),
-                                        ]);
+        $user = User::factory()->create(
+            [
+                'password' => bcrypt('correct-password'),
+            ]
+        );
 
         Sanctum::actingAs($user);
 

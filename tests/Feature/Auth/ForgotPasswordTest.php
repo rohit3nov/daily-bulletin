@@ -4,7 +4,6 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Tests\TestCase;
@@ -25,7 +24,7 @@ class ForgotPasswordTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJson(['message' => 'Password reset link sent.']);
+            ->assertJson(['message' => 'We have emailed your password reset link.']);
 
         Notification::assertSentTo($user, ResetPassword::class);
     }

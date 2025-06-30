@@ -37,7 +37,7 @@ class NewsOrgTest extends TestCase
             ]
         ]);
 
-        // Mock the API response (based on your original data)
+        // Mock the API response
         Http::fake(
             [
                 'https://newsapi.org/*' => Http::response(

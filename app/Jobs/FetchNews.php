@@ -18,7 +18,8 @@ class FetchNews implements ShouldQueue
 
     public function __construct(
         protected string $source,
-        protected string $category
+        protected string $category,
+        protected ArticleService $articleService
     ) {
     }
 
@@ -27,7 +28,7 @@ class FetchNews implements ShouldQueue
         return $this->category;
     }
 
-    public function handle(ArticleService $articleService): void
+    public function handle(): void
     {
         $sourceClass = "App\\Services\\NewsApi\\{$this->source}";
 
@@ -47,7 +48,7 @@ class FetchNews implements ShouldQueue
          );
 
         if (!empty($this->articles)) {
-            $articleService->storeMany($this->articles, $this->category);
+            $this->articleService->storeMany($this->articles, $this->category);
         }
     }
 }

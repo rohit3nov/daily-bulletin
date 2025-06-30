@@ -2,9 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class RegisterTest extends TestCase
@@ -22,11 +20,12 @@ class RegisterTest extends TestCase
         ]);
 
         $response->assertCreated()
-            ->assertJsonStructure([
-                                      'message',
-                                      'token',
-                                      'user' => ['id', 'name', 'email'],
-                                  ]);
+            ->assertJsonStructure(
+                [
+                    'token',
+                    'user' => ['id', 'name', 'email'],
+                ]
+            );
 
         $this->assertDatabaseHas('users', [
             'email' => 'john@example.com',

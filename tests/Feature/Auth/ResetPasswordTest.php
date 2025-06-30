@@ -3,7 +3,6 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -31,7 +30,7 @@ class ResetPasswordTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJson(['message' => 'Password has been reset successfully.']);
+            ->assertJson(['message' => 'Your password has been reset.']);
 
         $this->assertTrue(Hash::check('newpassword123', $user->fresh()->password));
     }

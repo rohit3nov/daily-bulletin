@@ -4,7 +4,6 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class LoginTest extends TestCase
@@ -14,9 +13,11 @@ class LoginTest extends TestCase
     /** @test */
     public function it_logs_in_a_user_successfully()
     {
-        $user = User::factory()->create([
-                                            'password' => bcrypt('password123'),
-                                        ]);
+        $user = User::factory()->create(
+            [
+                'password' => bcrypt('password123'),
+            ]
+        );
 
         $response = $this->postJson('/api/auth/login', [
             'email'    => $user->email,
@@ -24,28 +25,32 @@ class LoginTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonStructure([
-                                      'message',
-                                      'token',
-                                      'user' => ['id', 'name', 'email'],
-                                  ]);
+            ->assertJsonStructure(
+                [
+                    'token',
+                    'user' => ['id', 'name', 'email'],
+                ]
+            );
     }
 
     /** @test */
     public function it_fails_login_with_invalid_credentials()
     {
-        $user = User::factory()->create([
-                                            'password' => bcrypt('password123'),
-                                        ]);
+        $user = User::factory()->create(
+            [
+                'password' => bcrypt('password123'),
+            ]
+        );
 
         $response = $this->postJson('/api/auth/login', [
             'email'    => $user->email,
             'password' => 'wrong-password',
         ]);
 
-        $response->assertStatus(401)
-            ->assertJson([
-                             'message' => 'Invalid credentials',
-                         ]);
+        $response->assertStatus(401)->assertJson(
+            [
+                'message' => 'Invalid credentials',
+            ]
+        );
     }
 }

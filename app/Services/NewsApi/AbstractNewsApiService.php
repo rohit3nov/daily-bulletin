@@ -87,6 +87,11 @@ abstract class AbstractNewsApiService
         $mapped = [];
 
         foreach ($this->getMapping() as $key => $path) {
+            if (str_starts_with($path, 'Text:')) {
+                $mapped[$key] = substr($path, strlen('Text:'));
+                continue;
+            }
+
             $mapped[$key] = data_get($article, $path);
         }
 
