@@ -9,12 +9,11 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Services\ArticleService;
+use App\Contracts\NewsApiInterface;
 
 class FetchNews implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    protected array $articles = [];
 
     public function __construct(
         protected string $source,
@@ -30,25 +29,16 @@ class FetchNews implements ShouldQueue
 
     public function handle(): void
     {
-        $sourceClass = "App\\Services\\NewsApi\\{$this->source}";
+        $api = app()->makeWith(NewsApiInterface::class, ['source' => $this->source]);
 
-        if (!class_exists($sourceClass)) {
-            logger()->warning("Source class {$sourceClass} not implemented. Skipping.");
+        if (RateLimiter::tooManyAttempts('news-api-' . $api->getName(), $api->getRateLimit())) {
             return;
         }
 
-         $api = app($sourceClass);
+        $articles = $api->fetch($this->category);
 
-         RateLimiter::attempt(
-             'news-api-' . $api->getName(),
-             $api->getRateLimit(),
-             function () use ($api) {
-                 $this->articles = $api->fetch($this->category);
-             }
-         );
-
-        if (!empty($this->articles)) {
-            $this->articleService->storeMany($this->articles, $this->category);
+        if (!empty($articles)) {
+            $this->articleService->storeMany($articles, $this->category);
         }
     }
 }
