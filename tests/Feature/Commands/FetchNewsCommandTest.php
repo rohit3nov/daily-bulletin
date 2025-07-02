@@ -16,70 +16,21 @@ class FetchNewsCommandTest extends TestCase
         // Prevent actual job handling
         Bus::fake();
 
-        // Simulated config structure with actual expected keys
-        Config::set('services.newsapi.sources', [
-            'NewsOrg'  => [
-                'url'          => 'https://newsapi.org',
-                'endpoint'     => '/v2/top-headlines',
-                'search_key'   => 'q',
-                'response_key' => 'articles',
-                'rate_limit'   => 10,
-                'query_params' => [
-                    'country'  => 'us',
-                    'pageSize' => 20,
-                    'apiKey'   => 'dummy-api-key'
-                ],
-                'mapping'      => [
-                    'title'        => 'title',
-                    'description'  => 'description',
-                    'url'          => 'url',
-                    'url_to_image' => 'urlToImage',
-                    'published_at' => 'publishedAt',
-                    'source'       => 'source.name',
-                    'source_id'    => 'source.id',
-                    'author'       => 'author',
-                    'content'      => 'content'
-                ],
-                'categories'   => [
-                    'business',
-                    'technology',
-                ]
-            ],
-            'Guardian' => [
-                'url'          => 'https://content.guardianapis.com',
-                'endpoint'     => 'search',
-                'search_key'   => 'q',
-                'response_key' => 'response.results',
-                'rate_limit'   => 10,
-                'query_params' => [
-                    'show-fields' => 'thumbnail,bodyText,byline',
-                    'api-key'     => 'dummy-guardian-key'
-                ],
-                'mapping'      => [
-                    'title'        => 'webTitle',
-                    'description'  => 'description',
-                    'url'          => 'webUrl',
-                    'url_to_image' => 'fields.thumbnail',
-                    'published_at' => 'webPublicationDate',
-                    'source'       => 'The Guardian',
-                    'source_id'    => 'guardian',
-                    'author'       => 'fields.byline',
-                    'content'      => 'fields.bodyText'
-                ],
-                'categories'   => [
-                    'World News',
-                    'Technology',
-                ]
-            ],
-        ]);
+        $sources = config('services.newsapi.sources');
+        foreach ($sources as $key => &$source) {
+            $source['categories'] = array_slice($source['categories'], 0, 2); // Keep only 2 categories
+        }
+
+        // Set the modified config for the test
+        Config::set('services.newsapi.sources', $sources);
 
         Artisan::call('fetch:news');
 
-        Bus::assertDispatchedTimes(FetchNews::class, 4);
+        Bus::assertDispatchedTimes(FetchNews::class, 6);
 
-        // Optional: make sure a specific category/source job is dispatched
+        // making sure a specific category/source job is dispatched
         Bus::assertDispatched(FetchNews::class, function ($job) {
-            return strtolower($job->getCategory()) === 'technology';
+            return strtolower($job->getCategory()) === 'general';
         });
     }
 

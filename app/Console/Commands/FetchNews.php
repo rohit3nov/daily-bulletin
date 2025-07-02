@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Attribute\AsCommand;
+use App\Services\ArticleService;
 
 #[AsCommand(name: 'fetch:news')]
 class FetchNews extends Command
@@ -17,7 +18,8 @@ class FetchNews extends Command
             foreach ($config["categories"] as $category) {
                 \App\Jobs\FetchNews::dispatch(
                     $source,
-                    $category
+                    $category,
+                    app(ArticleService::class)
                 );
             }
         }

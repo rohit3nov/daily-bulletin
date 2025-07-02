@@ -6,59 +6,64 @@ use App\Jobs\FetchNews;
 use App\Services\ArticleService;
 use App\Contracts\NewsApiInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\App;
 use Tests\TestCase;
 
 class FetchNewsJobTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_it_fetches_and_stores_articles()
+    /** @test */
+    public function it_fetches_articles_from_api_and_stores_them()
     {
-        // Arrange: create a fake category
+        $source   = 'MockApi';
         $category = 'Technology';
+        $publishedAt = Carbon::parse('2025-06-21T12:00:00Z')->toISOString();
 
-        // Create a mock NewsApi service
+        $articles = [
+            [
+                'title'        => 'NASA spacecraft resumes mission',
+                'description'  => 'Psyche spacecraft resumes full thrust',
+                'content'      => 'Details of recovery...',
+                'url'          => 'https://dailygalaxy.com/2025/06/nasas-psyche-spacecraft-returns/',
+                'url_to_image' => 'https://dailygalaxy.com/image.jpg',
+                'published_at' => $publishedAt,
+                'source'       => 'The Daily Galaxy',
+                'source_id'    => 'dailygalaxy',
+                'author'       => null,
+            ],
+            [
+                'title'        => 'HIV prevention shot approved',
+                'description'  => 'FDA approves new shot',
+                'content'      => 'Effective in trials...',
+                'url'          => 'https://www.washingtonpost.com/wellness/2025/06/21/yeztugo-hiv-prevention-shot/',
+                'url_to_image' => 'https://washpost.com/image.jpg',
+                'published_at' => $publishedAt,
+                'source'       => 'Washington Post',
+                'source_id'    => 'wp',
+                'author'       => 'Dr. J Smith',
+            ],
+        ];
+
         $mockApi = $this->createMock(NewsApiInterface::class);
         $mockApi->method('getName')->willReturn('mockapi');
         $mockApi->method('getRateLimit')->willReturn(10);
-        $mockApi->method('fetch')->with($category)->willReturn(
-            [
-                [
-                    'title'        => 'NASA spacecraft resumes mission',
-                    'description'  => 'Psyche spacecraft resumes full thrust',
-                    'content'      => 'Details of recovery...',
-                    'url'          => 'https://dailygalaxy.com/2025/06/nasas-psyche-spacecraft-returns/',
-                    'url_to_image' => 'https://dailygalaxy.com/image.jpg',
-                    'published_at' => now()->toISOString(),
-                    'source'       => 'The Daily Galaxy',
-                    'source_id'    => 'dailygalaxy',
-                    'author'       => null,
-                ],
-                [
-                    'title'        => 'HIV prevention shot approved',
-                    'description'  => 'FDA approves new shot',
-                    'content'      => 'Effective in trials...',
-                    'url'          => 'https://www.washingtonpost.com/wellness/2025/06/21/yeztugo-hiv-prevention-shot/',
-                    'url_to_image' => 'https://washpost.com/image.jpg',
-                    'published_at' => now()->toISOString(),
-                    'source'       => 'Washington Post',
-                    'source_id'    => 'wp',
-                    'author'       => 'Dr. J Smith',
-                ],
-            ]
-        );
+        $mockApi->method('fetch')->with($category)->willReturn($articles);
 
-        // Use Laravel container to auto-inject the real ArticleService
-        $articleService = new ArticleService();
+        App::bind(NewsApiInterface::class, function ($app, $params) use ($mockApi, $source) {
+            if ($params['source'] === $source) {
+                return $mockApi;
+            }
+            throw new \InvalidArgumentException("Unexpected source in test: {$params['source']}");
+        });
 
-        // Act: Dispatch the job
-        $job = new FetchNews($mockApi, $category, $articleService);
+        $articleService = app(ArticleService::class);
+
+        $job = new FetchNews($source, $category, $articleService);
         $job->handle();
 
-        // Assert: Category is created
         $this->assertDatabaseHas('categories', ['name' => $category]);
-
-        // Assert: Articles are stored
         $this->assertDatabaseCount('articles', 2);
         $this->assertDatabaseHas('articles', ['title' => 'NASA spacecraft resumes mission']);
     }
