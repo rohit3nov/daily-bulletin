@@ -1,61 +1,322 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Daily Bulletin
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel-based News Aggregator API that collects articles from multiple news providers, normalizes the data into a unified structure, stores them efficiently, and exposes RESTful APIs for consumption by web or mobile applications.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### News Aggregation
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* Aggregates articles from multiple providers
+* Supports:
 
-## Learning Laravel
+  * NewsOrg
+  * The Guardian
+  * New York Times
+* Normalizes data into a common format
+* Stores articles and categories in a centralized database
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Authentication
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+* User Registration
+* Login
+* Logout
+* Forgot Password
+* Reset Password
+* Change Password
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Powered by Laravel Sanctum.
 
-## Laravel Sponsors
+### Articles
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+* Paginated article listing
+* Article detail endpoint
+* Search support
+* Filter by:
 
-### Premium Partners
+  * Category
+  * Source
+  * Date
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### User Preferences
 
-## Contributing
+* Preferred categories
+* Preferred news sources
+* Personalized news feed
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Background Processing
 
-## Code of Conduct
+* Queue-based article ingestion
+* Scheduled news fetching
+* Rate-limited provider access
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Documentation
 
-## Security Vulnerabilities
+* Scribe-generated API documentation
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Testing
 
-## License
+* Unit Tests
+* Feature Tests
+* Integration Tests
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Containerization
+
+* Dockerized application
+* Dedicated containers for:
+
+  * PHP Application
+  * Nginx
+  * MySQL
+  * Queue Worker
+  * Scheduler
+
+---
+
+## Architecture
+
+```text
+fetch:news Command
+        │
+        ▼
+FetchNews Job
+        │
+        ▼
+NewsApiInterface
+        │
+ ┌──────┼──────┐
+ ▼      ▼      ▼
+NewsOrg Guardian NYTimes
+        │
+        ▼
+ArticleService
+        │
+        ▼
+Database
+```
+
+---
+
+## Tech Stack
+
+* PHP 8.2
+* Laravel 12
+* MySQL 8
+* Laravel Sanctum
+* Docker
+* Nginx
+* PHPUnit
+* Scribe
+
+---
+
+## Installation
+
+### Clone Repository
+
+```bash
+git clone https://github.com/rohit3nov/daily-bulletin.git
+cd daily-bulletin
+```
+
+### Install Dependencies
+
+```bash
+composer install
+```
+
+### Environment Setup
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Configure database credentials and API keys.
+
+### Run Migrations
+
+```bash
+php artisan migrate
+```
+
+---
+
+## External News Provider Configuration
+
+Configure API credentials inside `.env`.
+
+Example:
+
+```env
+NEWSORG_API_KEY=
+GUARDIAN_API_KEY=
+NYTIMES_API_KEY=
+```
+
+---
+
+## Running Locally
+
+```bash
+php artisan serve
+```
+
+Run queue worker:
+
+```bash
+php artisan queue:work
+```
+
+Run scheduler:
+
+```bash
+php artisan schedule:work
+```
+
+---
+
+## Fetch News Manually
+
+Dispatch news aggregation jobs:
+
+```bash
+php artisan fetch:news
+```
+
+This command:
+
+* Iterates through configured providers
+* Iterates through configured categories
+* Dispatches queue jobs
+* Fetches articles asynchronously
+
+---
+
+## Docker Setup
+
+Build and start containers:
+
+```bash
+docker-compose up -d --build
+```
+
+Application:
+
+```text
+http://localhost:8000
+```
+
+### Available Containers
+
+| Container      | Purpose             |
+| -------------- | ------------------- |
+| news-app       | Laravel Application |
+| news-nginx     | Web Server          |
+| news-mysql     | Database            |
+| news-queue     | Queue Worker        |
+| news-scheduler | Scheduler           |
+
+---
+
+## Scheduler Setup
+
+The project includes a dedicated scheduler container.
+
+Scheduler script:
+
+```text
+docker/scheduler/schedule-cron.sh
+```
+
+Executes:
+
+```bash
+php artisan schedule:run
+```
+
+every minute.
+
+---
+
+## API Documentation
+
+Generate docs:
+
+```bash
+php artisan scribe:generate
+```
+
+Access documentation:
+
+```text
+/public/docs
+```
+
+---
+
+## Testing
+
+Run all tests:
+
+```bash
+php artisan test
+```
+
+Run specific suites:
+
+```bash
+php artisan test --testsuite=Unit
+```
+
+```bash
+php artisan test --testsuite=Feature
+```
+
+---
+
+## Project Structure
+
+```text
+app/
+├── Console/
+├── Contracts/
+├── Http/
+│   ├── Controllers/
+│   ├── Requests/
+│   └── Resources/
+├── Jobs/
+├── Models/
+├── Services/
+└── Providers/
+
+tests/
+├── Feature/
+└── Unit/
+
+docker/
+├── nginx/
+├── php/
+└── scheduler/
+```
+
+---
+
+## Future Improvements
+
+* Redis caching
+* Elasticsearch integration
+* Real-time notifications
+* Article recommendation engine
+* AI-powered summarization
+* Trending articles analytics
+* Multi-language support
+
+---
+
+## Author
+
+Rohit
+
+Daily Bulletin was built as a production-style Laravel News Aggregator demonstrating API design, service-oriented architecture, queue processing, scheduling, testing, and containerized deployment.
